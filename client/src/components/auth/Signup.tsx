@@ -1,5 +1,5 @@
 import { useState, FormEvent, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '../../context/AuthContext';
 import { handleFirebaseError } from '../../utils/firebase-errors';
 
@@ -13,7 +13,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   
   const { signup } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,7 +37,7 @@ export default function Signup() {
         nameRef.current?.value || ''
       );
       
-      navigate('/');
+      setLocation('/');
     } catch (err) {
       setError(handleFirebaseError(err));
     } finally {
@@ -127,7 +127,7 @@ export default function Signup() {
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
             Hai già un account?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
               Accedi
             </Link>
           </p>

@@ -1,5 +1,5 @@
 import { useState, FormEvent, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '../../context/AuthContext';
 import { handleFirebaseError } from '../../utils/firebase-errors';
 
@@ -15,7 +15,7 @@ export default function UpdateProfile() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -147,7 +147,7 @@ export default function UpdateProfile() {
             
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => setLocation('/')}
               className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Annulla

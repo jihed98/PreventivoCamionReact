@@ -1,5 +1,5 @@
 import { useState, FormEvent, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '../../context/AuthContext';
 import { handleFirebaseError } from '../../utils/firebase-errors';
 
@@ -11,7 +11,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -26,7 +26,7 @@ export default function Login() {
       setLoading(true);
       
       await login(emailRef.current.value, passwordRef.current.value);
-      navigate('/');
+      setLocation('/');
     } catch (err) {
       setError(handleFirebaseError(err));
     } finally {
@@ -77,7 +77,7 @@ export default function Login() {
             </div>
             
             <div className="text-right">
-              <Link to="/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
+              <Link href="/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
                 Password dimenticata?
               </Link>
             </div>
@@ -97,7 +97,7 @@ export default function Login() {
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
             Non hai un account?{' '}
-            <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
               Registrati
             </Link>
           </p>

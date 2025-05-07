@@ -1,22 +1,24 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
+  User,
+  UserCredential,
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  signOut,
   sendPasswordResetEmail,
   updateEmail,
   updatePassword,
   updateProfile,
-  User,
+  signOut,
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
+// Definisco il tipo del contesto
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
   signup: (email: string, password: string, name?: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserEmail: (email: string) => Promise<void>;
@@ -24,64 +26,82 @@ interface AuthContextType {
   updateUserProfile: (name: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+// Creo il contesto
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Hook per utilizzare il contesto
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth deve essere usato all\'interno di un AuthProvider');
   }
   return context;
 }
 
+// Props per il provider
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Provider che avvolge l'applicazione
 export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Registrazione nuovo utente
   async function signup(email: string, password: string, name?: string) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // Update profile if name is provided
+    // Aggiorno il nome se fornito
     if (name && userCredential.user) {
       await updateProfile(userCredential.user, {
         displayName: name
       });
+      
+      // Forza un refresh dell'utente dopo l'aggiornamento del profilo
+      setCurrentUser({ ...userCredential.user });
     }
   }
 
+  // Login
   function login(email: string, password: string) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
+  // Logout
   function logout() {
     return signOut(auth);
   }
 
+  // Reset password
   function resetPassword(email: string) {
     return sendPasswordResetEmail(auth, email);
   }
 
+  // Aggiorna email
   function updateUserEmail(email: string) {
-    if (!currentUser) throw new Error('Nessun utente autenticato');
+    if (!currentUser) throw new Error('Nessun utente loggato');
     return updateEmail(currentUser, email);
   }
 
+  // Aggiorna password
   function updateUserPassword(password: string) {
-    if (!currentUser) throw new Error('Nessun utente autenticato');
+    if (!currentUser) throw new Error('Nessun utente loggato');
     return updatePassword(currentUser, password);
   }
 
+  // Aggiorna profilo (nome)
   function updateUserProfile(name: string) {
-    if (!currentUser) throw new Error('Nessun utente autenticato');
+    if (!currentUser) throw new Error('Nessun utente loggato');
     return updateProfile(currentUser, {
       displayName: name
+    }).then(() => {
+      // Forza un refresh dell'utente dopo l'aggiornamento del profilo
+      setCurrentUser({ ...currentUser });
     });
   }
 
+  // Ascolto i cambiamenti dello stato di autenticazione
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -91,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return unsubscribe;
   }, []);
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     loading,
     signup,

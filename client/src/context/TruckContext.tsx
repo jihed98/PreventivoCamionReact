@@ -79,15 +79,15 @@ export const TruckProvider = ({ children }: { children: ReactNode }) => {
     
     // Salva nel database
     try {
-      apiRequest({
-        path: '/api/quotes',
-        method: 'POST',
-        body: {
+      apiRequest(
+        'POST',
+        '/api/quotes',
+        {
           ...quote,
           userId: 1, // Per ora usiamo un ID utente fisso
           status: 'pending'
         }
-      });
+      );
     } catch (error) {
       console.error('Errore durante il salvataggio del preventivo nel database:', error);
     }
@@ -107,11 +107,11 @@ export const TruckProvider = ({ children }: { children: ReactNode }) => {
     
     // Aggiorna nel database
     try {
-      apiRequest({
-        path: `/api/quotes/${id}/status`,
-        method: 'PATCH',
-        body: { status }
-      });
+      apiRequest(
+        'PATCH',
+        `/api/quotes/${id}/status`,
+        { status }
+      );
     } catch (error) {
       console.error('Errore durante l\'aggiornamento dello stato nel database:', error);
     }

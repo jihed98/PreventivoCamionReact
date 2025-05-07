@@ -71,21 +71,50 @@ export const TruckProvider = ({ children }: { children: ReactNode }) => {
     saveTaxSettings(settings);
   };
 
-  // Save a quote
+  // Save a quote (both locally and to server)
   const saveQuote = (quote: QuoteDetails) => {
+    // Salva localmente
     const newQuote = storeQuote(quote);
     setQuotes([...quotes, newQuote]);
+    
+    // Salva nel database
+    try {
+      apiRequest({
+        path: '/api/quotes',
+        method: 'POST',
+        body: {
+          ...quote,
+          userId: 1, // Per ora usiamo un ID utente fisso
+          status: 'pending'
+        }
+      });
+    } catch (error) {
+      console.error('Errore durante il salvataggio del preventivo nel database:', error);
+    }
+    
     return newQuote;
   };
 
-  // Update a quote's status
+  // Update a quote's status (both locally and on server)
   const updateQuoteStatus = (id: number, status: 'pending' | 'confirmed' | 'rejected') => {
+    // Aggiorna localmente
     updateStoredQuoteStatus(id, status);
     setQuotes(
       quotes.map(quote => 
         quote.id === id ? { ...quote, status } : quote
       )
     );
+    
+    // Aggiorna nel database
+    try {
+      apiRequest({
+        path: `/api/quotes/${id}/status`,
+        method: 'PATCH',
+        body: { status }
+      });
+    } catch (error) {
+      console.error('Errore durante l\'aggiornamento dello stato nel database:', error);
+    }
   };
 
   // Calculate a new quote

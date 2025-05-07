@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import TruckParameters from "@/pages/TruckParameters";
 import TaxSettings from "@/pages/TaxSettings";
 import TripSimulation from "@/pages/TripSimulation";
+import QuoteHistory from "@/pages/QuoteHistory";
 import { TruckProvider } from "./context/TruckContext";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/truck-parameters" component={TruckParameters} />
       <Route path="/tax-settings" component={TaxSettings} />
       <Route path="/trip-simulation" component={TripSimulation} />
+      <Route path="/quote-history" component={QuoteHistory} />
       <Route component={NotFound} />
     </Switch>
   );

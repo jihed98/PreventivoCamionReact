@@ -46,7 +46,6 @@ export default function QuoteHistory() {
     queryKey: ['/api/quotes'],
     queryFn: getQueryFn({
       on401: 'returnNull',
-      pathBuilder: () => '/api/quotes',
     }),
   });
   
@@ -54,11 +53,11 @@ export default function QuoteHistory() {
   const { quotes: localQuotes } = useTruck();
   
   // Combino i due insiemi di preventivi, dando priorità a quelli dal database
-  const allQuotes = quotesFromDb || localQuotes;
+  const allQuotes: QuoteDetails[] = quotesFromDb as QuoteDetails[] || localQuotes;
   
   // Filtra per stato se necessario
   const filteredQuotes = statusFilter 
-    ? allQuotes.filter(quote => quote.status === statusFilter)
+    ? allQuotes.filter((quote: QuoteDetails) => quote.status === statusFilter)
     : allQuotes;
   
   // Calcola il numero totale di pagine
@@ -200,7 +199,7 @@ export default function QuoteHistory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                  {currentQuotes.map((quote) => (
+                  {currentQuotes.map((quote: QuoteDetails) => (
                     <TableRow key={quote.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(quote.created)}

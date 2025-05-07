@@ -18,6 +18,7 @@ import {
   calculateMonthlyFixedCosts,
   calculateAverageCostPerKm
 } from '@/lib/calculations';
+import { apiRequest } from '@/lib/queryClient';
 
 interface TruckContextType {
   truckParams: TruckParameters;

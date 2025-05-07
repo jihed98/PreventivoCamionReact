@@ -18,7 +18,7 @@ interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
   signup: (email: string, password: string, name?: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<UserCredential>;
+  login: (email: string, password: string) => Promise<any>; // Uso any per evitare problemi con UserCredential
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserEmail: (email: string) => Promise<void>;

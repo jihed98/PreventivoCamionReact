@@ -1,103 +1,108 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { handleFirebaseError } from '../../utils/firebase-errors';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
-
+  
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    
+    // Validazione
+    if (!emailRef.current?.value || !passwordRef.current?.value) {
+      return setError('Compila tutti i campi richiesti');
+    }
     
     try {
       setError('');
       setLoading(true);
-      await login(email, password);
+      
+      await login(emailRef.current.value, passwordRef.current.value);
       navigate('/');
-    } catch (err: any) {
-      let errorMessage = 'Errore durante il login';
-      
-      // Handle specific Firebase Auth errors
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        errorMessage = 'Email o password non corretti';
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = 'Troppi tentativi di login. Riprova più tardi';
-      }
-      
-      setError(errorMessage);
+    } catch (err) {
+      setError(handleFirebaseError(err));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Accedi
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Accedi</h1>
+          <p className="mt-2 text-gray-600">Inserisci le tue credenziali</p>
+        </div>
+        
+        {error && (
+          <div className="p-3 mb-3 text-sm text-red-500 bg-red-100 rounded-md">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
                 type="email"
+                id="email"
+                ref={emailRef}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link 
-                  to="/reset-password" 
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Password dimenticata?
-                </Link>
-              </div>
-              <Input
-                id="password"
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
                 type="password"
+                id="password"
+                ref={passwordRef}
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <Button
+            
+            <div className="text-right">
+              <Link to="/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
+                Password dimenticata?
+              </Link>
+            </div>
+          </div>
+          
+          <div>
+            <button
               type="submit"
-              className="w-full"
               disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {loading ? 'Accesso in corso...' : 'Accedi'}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
+            </button>
+          </div>
+        </form>
+        
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
             Non hai un account?{' '}
             <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
               Registrati
             </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

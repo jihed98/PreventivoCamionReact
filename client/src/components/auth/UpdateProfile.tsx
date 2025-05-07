@@ -1,158 +1,160 @@
-import { useState, FormEvent, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, FormEvent, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { handleFirebaseError } from '../../utils/firebase-errors';
 
 export default function UpdateProfile() {
   const { currentUser, updateUserEmail, updateUserPassword, updateUserProfile } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+  
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const passwordConfirmRef = useRef<HTMLInputElement>(null);
+  
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (currentUser) {
-      setEmail(currentUser.email || '');
-      setName(currentUser.displayName || '');
-    }
-  }, [currentUser]);
-
+  
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     
-    if (password && password !== confirmPassword) {
+    if (passwordRef.current?.value !== passwordConfirmRef.current?.value) {
       return setError('Le password non corrispondono');
     }
     
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    
+    // Aggiorniamo nome, email e password se forniti
+    const promises = [];
+    
     try {
-      setError('');
-      setLoading(true);
-      
-      const promises = [];
-      
-      if (email !== currentUser?.email) {
-        promises.push(updateUserEmail(email));
+      // Aggiorna nome se modificato
+      if (nameRef.current?.value && nameRef.current.value !== currentUser?.displayName) {
+        promises.push(updateUserProfile(nameRef.current.value));
       }
       
-      if (name !== currentUser?.displayName) {
-        promises.push(updateUserProfile(name));
+      // Aggiorna email se modificata
+      if (emailRef.current?.value && emailRef.current.value !== currentUser?.email) {
+        promises.push(updateUserEmail(emailRef.current.value));
       }
       
-      if (password) {
-        promises.push(updateUserPassword(password));
+      // Aggiorna password se fornita
+      if (passwordRef.current?.value) {
+        promises.push(updateUserPassword(passwordRef.current.value));
       }
       
-      await Promise.all(promises);
-      
-      toast({
-        title: "Profilo aggiornato",
-        description: "Il tuo profilo è stato aggiornato con successo",
-      });
-      
-      // Reset password fields
-      setPassword('');
-      setConfirmPassword('');
-      
-    } catch (err: any) {
-      let errorMessage = 'Errore durante l\'aggiornamento del profilo';
-      
-      // Handle specific Firebase Auth errors
-      if (err.code === 'auth/requires-recent-login') {
-        errorMessage = 'Questa operazione è sensibile e richiede una autenticazione recente. Effettua nuovamente il login.';
-      } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Email già in uso';
+      // Esegui tutte le operazioni di aggiornamento
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        setSuccess('Profilo aggiornato con successo');
+      } else {
+        setSuccess('Nessuna modifica effettuata');
       }
-      
-      setError(errorMessage);
+    } catch (err) {
+      setError(handleFirebaseError(err));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Aggiorna Profilo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Aggiorna Profilo</h1>
+          <p className="mt-2 text-gray-600">Modifica i tuoi dati personali</p>
+        </div>
+        
+        {error && (
+          <div className="p-3 mb-3 text-sm text-red-500 bg-red-100 rounded-md">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="p-3 mb-3 text-sm text-green-500 bg-green-100 rounded-md">
+            {success}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Nome
+              </label>
+              <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="name"
+                ref={nameRef}
+                defaultValue={currentUser?.displayName || ''}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
                 type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="email"
+                ref={emailRef}
+                defaultValue={currentUser?.email || ''}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                Password <span className="text-xs text-gray-500">(lascia vuoto per mantenere uguale)</span>
-              </Label>
-              <Input
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                type="password"
                 id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                ref={passwordRef}
+                placeholder="Lascia vuoto per non modificare"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Conferma Password</Label>
-              <Input
-                id="confirm-password"
+            
+            <div>
+              <label htmlFor="password-confirm" className="block text-sm font-medium text-gray-700">
+                Conferma Password
+              </label>
+              <input
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={!password}
+                id="password-confirm"
+                ref={passwordConfirmRef}
+                placeholder="Lascia vuoto per non modificare"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={loading}
-              >
-                {loading ? 'Aggiornamento...' : 'Aggiorna Profilo'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/')}
-                className="flex-1"
-              >
-                Annulla
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          
+          <div className="flex space-x-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? 'Aggiornamento...' : 'Aggiorna'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Annulla
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

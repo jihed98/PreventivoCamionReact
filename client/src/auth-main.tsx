@@ -1,6 +1,10 @@
-import { createRoot } from "react-dom/client";
-import AuthApp from "./AuthApp";
-import "./index.css";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import { AuthApp } from './auth-index';
 
-// Create a root element and render the app
-createRoot(document.getElementById("root")!).render(<AuthApp />);
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <AuthApp />
+  </React.StrictMode>,
+);

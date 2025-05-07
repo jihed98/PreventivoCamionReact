@@ -1,15 +1,32 @@
-// Export Firebase config
-export { default as firebase, auth } from './firebase';
+// Esporta i componenti di autenticazione
+import { AuthProvider, useAuth } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import ResetPassword from './components/auth/ResetPassword';
+import UpdateProfile from './components/auth/UpdateProfile';
+import AuthApp from './AuthApp';
 
-// Export contexts
-export { AuthProvider, useAuth } from './context/AuthContext';
+// Esporta le utilità per la gestione degli errori
+import { handleFirebaseError, getErrorMessage } from './utils/firebase-errors';
 
-// Export components
-export { default as PrivateRoute } from './components/PrivateRoute';
-export { default as Login } from './components/auth/Login';
-export { default as Signup } from './components/auth/Signup';
-export { default as ResetPassword } from './components/auth/ResetPassword';
-export { default as UpdateProfile } from './components/auth/UpdateProfile';
+// Esporta l'app completa
+export { AuthApp };
 
-// Export the full authentication app
-export { default as AuthApp } from './AuthApp';
+// Esporta il provider di autenticazione e l'hook
+export { AuthProvider, useAuth };
+
+// Esporta i componenti individuali
+export { 
+  PrivateRoute,
+  Login,
+  Signup,
+  ResetPassword,
+  UpdateProfile
+};
+
+// Esporta le utilità per gli errori
+export {
+  handleFirebaseError,
+  getErrorMessage
+};
